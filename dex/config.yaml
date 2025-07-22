@@ -1,0 +1,55 @@
+issuer: http://localhost
+
+storage:
+  type: memory
+
+web:
+  http: 0.0.0.0:5556
+
+logger:
+  level: "debug"
+  format: "text"
+
+oauth2:
+  skipApprovalScreen: true
+
+staticClients:
+- id: flask-app
+  redirectURIs:
+  - 'http://localhost:5000/oauth2/callback'
+  name: 'Flask Application (OAuth2 PEP)'
+  secret: flask-app-secret
+
+connectors:
+- type: ldap
+  id: ldap
+  name: LDAP
+  config:
+    host: openldap:389
+    insecureNoSSL: true
+    insecureSkipVerify: true
+    
+    # Authentication for LDAP searches
+    bindDN: cn=admin,dc=example,dc=org
+    bindPW: adminpassword
+    
+    # Base DN for searching users
+    userSearch:
+      baseDN: ou=people,dc=example,dc=org
+      filter: "(objectClass=inetOrgPerson)"
+      username: uid
+      idAttr: uid
+      emailAttr: mail
+      nameAttr: displayName
+      preferredUsernameAttr: uid
+    
+    # Base DN for searching groups
+    groupSearch:
+      baseDN: ou=groups,dc=example,dc=org
+      filter: "(objectClass=groupOfNames)"
+      userMatchers:
+      - userAttr: DN
+        groupAttr: member
+      nameAttr: cn
+
+enablePasswordDB: false

@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  openldap:
+    build: ./LDAP
+    container_name: ldap-server
+    environment:
+      LDAP_ORGANISATION: "Example Inc."
+      LDAP_DOMAIN: "example.org"
+      LDAP_BASE_DN: "dc=example,dc=org"
+      LDAP_ADMIN_PASSWORD: "adminpassword"
+      LDAP_CONFIG_PASSWORD: "configpassword"
+      LDAP_READONLY_USER: "false"
+      LDAP_RFC2307BIS_SCHEMA: "false"
+      LDAP_BACKEND: "mdb"
+      LDAP_TLS: "true"
+      LDAP_TLS_CRT_FILENAME: "ldap.crt"
+      LDAP_TLS_KEY_FILENAME: "ldap.key"
+      LDAP_TLS_DH_PARAM_FILENAME: "dhparam.pem"
+      LDAP_TLS_CA_CRT_FILENAME: "ca.crt"
+      LDAP_TLS_ENFORCE: "false"
+      LDAP_TLS_VERIFY_CLIENT: "never"
+      LDAP_REPLICATION: "false"
+    ports:
+      - "1389:389"
+      - "1636:636"
+    networks:
+      - app-network
+
+  dex:
+    build: ./dex
+    container_name: dex-server
+    ports:
+      - "5556:5556"  # Temporary exposure for testing
+    volumes:
+      - ./dex/config.yaml:/etc/dex/config.yaml
+    depends_on:
+      - openldap
+    networks:
+      - app-network
+
+  apache-proxy:
+    build: ./apache-proxy
+    container_name: apache-reverse-proxy
+    ports:
+      - "80:80"
+    depends_on:
+      - dex
+    networks:
+      - app-network
+
+  oauth2-pep:
+    build: ./oauth2-pep
+    container_name: oauth2-pep
+    ports:
+      - "5000:5000"
+    environment:
+      DEX_ISSUER: http://localhost
+      DEX_CLIENT_ID: flask-app
+      DEX_CLIENT_SECRET: flask-app-secret
+      BACKEND_URL: http://flask-app:8080
+      PEP_SECRET_KEY: oauth2-pep-secret-key-2024
+    extra_hosts:
+      - "localhost:host-gateway"
+    depends_on:
+      - apache-proxy
+      - flask-app
+    networks:
+      - app-network
+
+  flask-app:
+    build: ./flask-app
+    container_name: flask-application
+    ports:
+      - "8080:8080"
+    environment:
+      FLASK_PORT: 8080
+    depends_on:
+      - openldap
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge 
