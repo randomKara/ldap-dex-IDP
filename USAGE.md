@@ -1,121 +1,269 @@
-# Guide d'utilisation - Flask LDAP-DEX IDP
+# Flask LDAP-DEX OAuth2 Identity Provider - Usage Guide
 
-## 🚀 Démarrage rapide
+## 🚀 Quick Start
 
 ```bash
-# Lancer tous les services
+# Start all services
 docker compose up --build -d
 
-# Vérifier que tous les services fonctionnent
+# Check that all services are running
 docker compose ps
 ```
 
-## ✅ Tests de vérification
+## 🌐 Access Points
 
-### 1. Test du serveur LDAP
-```bash
-# Vérifier que les utilisateurs existent
-docker exec ldap-server ldapsearch -x -H ldap://localhost -b "dc=example,dc=org" -D "cn=admin,dc=example,dc=org" -w adminpassword "(objectClass=inetOrgPerson)" uid
+| Service | URL | Description |
+|---------|-----|-------------|
+| **Protected Application** | http://localhost:5000 | Main OAuth2-protected Flask app |
+| **Direct Backend** | http://localhost:8080 | Flask backend (protected by PEP) |
+| **LDAP Server** | ldap://localhost:1389 | OpenLDAP directory service |
+| **Dex OpenID Provider** | http://localhost:5556 | Direct Dex access (development) |
+| **OpenID Discovery** | http://localhost/.well-known/openid-configuration | OIDC discovery endpoint |
 
-# Tester l'authentification d'un utilisateur
-docker exec ldap-server ldapsearch -x -H ldap://localhost -b "dc=example,dc=org" -D "cn=user1,ou=people,dc=example,dc=org" -w password1 "(uid=user1)"
+## 🏗️ Architecture Overview
+
+```
+┌─────────────┐    ┌─────────────┐    ┌─────────────┐
+│   Browser   │────│ OAuth2 PEP  │────│ Apache      │
+│             │    │ (port 5000) │    │ Proxy       │
+└─────────────┘    └─────────────┘    │ (port 80)   │
+                          │           └─────────────┘
+                          │                  │
+                          ▼                  ▼
+                   ┌─────────────┐    ┌─────────────┐
+                   │ Flask App   │    │ Dex OIDC    │
+                   │ (port 8080) │    │ (port 5556) │
+                   └─────────────┘    └─────────────┘
+                                             │
+                                             ▼
+                                      ┌─────────────┐
+                                      │ LDAP Server │
+                                      │ (port 1389) │
+                                      └─────────────┘
 ```
 
-### 2. Test de l'application Flask
-```bash
-# Vérifier que Flask répond
-curl -s http://localhost:5000 | grep -o "<title>.*</title>"
+## ✅ Verification Tests
 
-# Tester la redirection de login
-curl -s http://localhost:5000/login 2>&1 | head -5
+### 1. Test OpenID Connect Endpoints
+```bash
+# Test discovery endpoint
+curl -s http://localhost/.well-known/openid-configuration | jq .issuer
+
+# Test authorization endpoint (should return 302 redirect)
+curl -I http://localhost/auth
+
+# Test JWKS endpoint
+curl -s http://localhost/keys | jq .keys[0].kty
 ```
 
-### 3. Test du serveur DEX
+### 2. Test OAuth2 Flow
 ```bash
-# Vérifier que DEX écoute
-docker compose logs dex --tail 5
+# Initial access should redirect to login
+curl -v http://localhost:5000/ 2>&1 | grep "Location:"
 
-# Test direct de DEX
-curl -s http://localhost:5556/.well-known/openid_configuration
+# Login endpoint should redirect to Dex
+curl -v http://localhost:5000/oauth2/login 2>&1 | grep "Location:"
 ```
 
-## 👥 Utilisateurs disponibles
-
-| Username | Password | Email | DN |
-|----------|----------|-------|-----|
-| user1 | password1 | user1@example.org | cn=user1,ou=people,dc=example,dc=org |
-| user2 | password2 | user2@example.org | cn=user2,ou=people,dc=example,dc=org |
-| user3 | password3 | user3@example.org | cn=user3,ou=people,dc=example,dc=org |
-| user4 | password4 | user4@example.org | cn=user4,ou=people,dc=example,dc=org |
-
-## 🛠️ Dépannage
-
-### Problème : Services ne démarrent pas
+### 3. Test LDAP Server
 ```bash
-# Arrêter et nettoyer
+# Verify LDAP users exist
+docker exec ldap-server ldapsearch -x -H ldap://localhost \
+  -b "dc=example,dc=org" -D "cn=admin,dc=example,dc=org" \
+  -w adminpassword "(objectClass=inetOrgPerson)" uid
+
+# Test user authentication
+docker exec ldap-server ldapsearch -x -H ldap://localhost \
+  -b "dc=example,dc=org" -D "cn=user1,ou=people,dc=example,dc=org" \
+  -w password1 "(uid=user1)"
+```
+
+### 4. Test Backend Protection
+```bash
+# Direct backend access should be forbidden
+curl -I http://localhost:8080/
+# Expected: HTTP/1.1 403 FORBIDDEN
+```
+
+## 👥 Available Users
+
+### LDAP Users
+| Username | Password | Email | Groups |
+|----------|----------|-------|--------|
+| user1 | password1 | user1@example.org | users |
+| user2 | password2 | user2@example.org | users |
+| user3 | password3 | user3@example.org | users |
+| user4 | password4 | user4@example.org | users |
+
+### Static Test User
+| Username | Password | Email |
+|----------|----------|-------|
+| admin | admin | admin@example.com |
+
+## 🔐 Complete Authentication Flow
+
+1. **Access Application**: Navigate to http://localhost:5000
+2. **OAuth2 Redirect**: Automatically redirected to `/oauth2/login`
+3. **Dex Authorization**: Redirected to Dex login page via Apache proxy
+4. **Choose Provider**: Select LDAP authentication or use static user
+5. **LDAP Login**: Enter LDAP credentials (e.g., user1/password1)
+6. **Token Exchange**: Dex issues OAuth2 tokens
+7. **PEP Validation**: OAuth2 PEP validates tokens and extracts user info
+8. **Protected Access**: Access granted to Flask backend with user headers
+
+## 🛠️ Troubleshooting
+
+### Services Won't Start
+```bash
+# Clean everything and restart
 docker compose down -v
 docker system prune -f
-
-# Redémarrer
 docker compose up --build -d
 ```
 
-### Problème : LDAP ne répond pas
+### LDAP Connection Issues
 ```bash
-# Vérifier les logs LDAP
+# Check LDAP logs
 docker compose logs openldap
 
-# Redémarrer seulement LDAP
-docker compose restart openldap
+# Test LDAP connectivity
+docker exec ldap-server ldapsearch -x -H ldap://localhost \
+  -b "dc=example,dc=org" -D "cn=admin,dc=example,dc=org" \
+  -w adminpassword "(objectClass=*)"
 ```
 
-### Problème : DEX ne répond pas
+### Dex Authentication Problems
 ```bash
-# Vérifier les logs DEX
+# Check Dex logs
 docker compose logs dex
 
-# Vérifier la configuration
+# Verify Dex configuration
 docker exec dex-server cat /etc/dex/config.yaml
 ```
 
-## 📁 Structure du projet
+### OAuth2 PEP Issues
+```bash
+# Check PEP logs
+docker compose logs oauth2-pep
+
+# Test PEP health
+curl http://localhost:5000/health
+```
+
+### Apache Proxy Problems
+```bash
+# Check Apache logs
+docker compose logs apache-proxy
+
+# Test proxy endpoints
+curl -I http://localhost/.well-known/openid-configuration
+curl -I http://localhost/auth
+```
+
+### CSS/Static Resources Not Loading
+```bash
+# Test static resource access
+curl -I http://localhost/static/main.css
+curl -I http://localhost/theme/styles.css
+
+# Should return HTTP/1.1 200 OK
+```
+
+## 📁 Project Structure
 
 ```
 ldap-dex-IDP/
-├── flask-app/           # Application Flask avec OIDC
-│   ├── app.py          # Code principal
-│   ├── requirements.txt # Dépendances Python
-│   └── Dockerfile      # Configuration Docker
-├── dex/                # Serveur DEX OIDC
-│   ├── config.yaml     # Configuration DEX
-│   └── Dockerfile      # Configuration Docker
-├── LDAP/               # Serveur OpenLDAP
-│   ├── bootstrap.ldif  # Données utilisateurs
-│   ├── setup-users.sh  # Script d'initialisation
-│   └── Dockerfile      # Configuration Docker
-├── docker-compose.yml  # Orchestration des services
-└── README.md          # Documentation
+├── apache-proxy/        # Apache reverse proxy
+│   ├── apache.conf      # Apache configuration
+│   └── Dockerfile       # Apache container config
+├── dex/                 # Dex OpenID Connect provider
+│   ├── config.yaml      # Dex configuration with LDAP
+│   ├── config-minimal.yaml # Minimal config (static users)
+│   └── Dockerfile       # Dex container config
+├── oauth2-pep/          # OAuth2 Policy Enforcement Point
+│   ├── pep.py          # PEP application code
+│   ├── requirements.txt # Python dependencies
+│   └── Dockerfile      # PEP container config
+├── flask-app/           # Protected Flask application
+│   ├── app.py          # Flask backend application
+│   ├── requirements.txt # Python dependencies
+│   └── Dockerfile      # Flask container config
+├── LDAP/               # OpenLDAP directory service
+│   ├── bootstrap.ldif  # Initial LDAP data
+│   ├── setup-users.sh  # User setup script
+│   └── Dockerfile      # LDAP container config
+├── docker-compose.yml  # Service orchestration
+├── README.md          # Project documentation
+├── USAGE.md           # This usage guide
+└── validation-report.md # Test results and validation
 ```
 
-## 🔗 URLs importantes
-
-- **Application Flask** : http://localhost:5000
-- **Serveur LDAP** : ldap://localhost:1389
-- **Serveur DEX** : http://localhost:5556
-- **Admin LDAP** : cn=admin,dc=example,dc=org (mot de passe: adminpassword)
-
-## 🔧 Commandes utiles
+## 🔧 Useful Commands
 
 ```bash
-# Voir tous les logs
+# View all logs
 docker compose logs -f
 
-# Redémarrer un service spécifique
+# Restart specific service
 docker compose restart <service-name>
 
-# Entrer dans un conteneur
+# Enter container shell
 docker exec -it <container-name> /bin/bash
 
-# Supprimer tout et recommencer
+# Check service health
+docker compose ps
+docker compose top
+
+# Clean restart
 docker compose down -v && docker compose up --build -d
-``` 
+
+# Test OAuth2 flow manually
+curl -v http://localhost:5000/oauth2/login
+
+# Test LDAP authentication
+docker exec ldap-server ldapwhoami -x -D "cn=user1,ou=people,dc=example,dc=org" -w password1
+```
+
+## 🔍 Development Notes
+
+### Configuration Files
+- **Dex**: Uses `config.yaml` (with LDAP) by default
+- **LDAP**: Bootstrapped with users from `bootstrap.ldif`
+- **Apache**: Routes OpenID endpoints to Dex, includes static resources
+- **PEP**: Handles OAuth2 flow and user session management
+
+### Security Features
+- ✅ OAuth2 Authorization Code flow
+- ✅ LDAP authentication integration
+- ✅ Backend protection via PEP
+- ✅ Secure token validation
+- ✅ User info injection via HTTP headers
+
+### Network Configuration
+- All services communicate via Docker internal network
+- Only ports 80 and 5000 are exposed to host
+- Internal service discovery via container names
+
+## 📈 Performance Tips
+
+- Use `docker compose up -d` for background operation
+- Monitor logs with `docker compose logs -f`
+- For production: use proper secrets management
+- For load testing: scale OAuth2 PEP service
+
+## 🎯 Next Steps
+
+1. **Production Deployment**: 
+   - Enable TLS/SSL encryption
+   - Use external secrets management
+   - Configure proper LDAP SSL certificates
+
+2. **User Management**:
+   - Add more LDAP users via LDIF files
+   - Configure group-based authorization
+   - Set up LDAP admin tools
+
+3. **Monitoring**:
+   - Add health checks for all services
+   - Configure logging aggregation
+   - Set up metrics collection 
