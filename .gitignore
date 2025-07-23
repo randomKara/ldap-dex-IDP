@@ -19,12 +19,9 @@ Thumbs.db
 # Docker
 .env
 
-# Security Audit Reports (generated files)
-security-audit/security_audit_report_*.json
-security-audit/security_audit_report_*.html
-security-audit/security_audit.log
-security-audit/__pycache__/
-security-audit/*.pyc
+# Security Audit (keep local)
+security-audit/
+run_security_audit.sh
 
 # Python
 __pycache__/

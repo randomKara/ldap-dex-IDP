@@ -25,9 +25,7 @@ connectors:
   id: ldap
   name: LDAP
   config:
-    host: openldap:389
-    insecureNoSSL: true
-    insecureSkipVerify: true
+    host: openldap:389app
     
     # Authentication for LDAP searches
     bindDN: cn=admin,dc=example,dc=org
