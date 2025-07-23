@@ -49,19 +49,11 @@ services:
     networks:
       - app-network
 
-  oauth2-pep:
-    build: ./oauth2-pep
-    container_name: oauth2-pep
+  pep:
+    build: ./PEP
+    container_name: pep
     ports:
-      - "5000:5000"
-    environment:
-      DEX_ISSUER: http://localhost
-      DEX_CLIENT_ID: flask-app
-      DEX_CLIENT_SECRET: flask-app-secret
-      BACKEND_URL: http://flask-app:8080
-      PEP_SECRET_KEY: oauth2-pep-secret-key-2024
-    extra_hosts:
-      - "localhost:host-gateway"
+      - "5000:80"
     depends_on:
       - apache-proxy
       - flask-app

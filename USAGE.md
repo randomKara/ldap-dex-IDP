@@ -144,7 +144,7 @@ docker exec dex-server cat /etc/dex/config.yaml
 ### OAuth2 PEP Issues
 ```bash
 # Check PEP logs
-docker compose logs oauth2-pep
+docker compose logs pep
 
 # Test PEP health
 curl http://localhost:5000/health
@@ -180,7 +180,7 @@ ldap-dex-IDP/
 │   ├── config.yaml      # Dex configuration with LDAP
 │   ├── config-minimal.yaml # Minimal config (static users)
 │   └── Dockerfile       # Dex container config
-├── oauth2-pep/          # OAuth2 Policy Enforcement Point
+├── PEP/                 # OAuth2 Policy Enforcement Point
 │   ├── pep.py          # PEP application code
 │   ├── requirements.txt # Python dependencies
 │   └── Dockerfile      # PEP container config

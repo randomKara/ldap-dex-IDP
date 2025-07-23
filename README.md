@@ -63,7 +63,7 @@ User → OAuth2 PEP (5000) → DEX OAuth2 (5556) → LDAP (1389)
 ## Directory Structure
 
 ```
-├── oauth2-pep/         # OAuth2 Policy Enforcement Point
+├── PEP/                # OAuth2 Policy Enforcement Point
 ├── flask-app/          # Protected Flask backend application  
 ├── dex/               # DEX OAuth2/OIDC Authorization Server
 ├── LDAP/              # OpenLDAP identity backend

@@ -38,7 +38,7 @@ This project delivers a **comprehensive OAuth2 Policy Enforcement Point (PEP) ar
 │   End Users     │────│   OAuth2 PEP    │────│   Protected     │
 │   (Browsers)    │    │   Gateway       │    │   Application   │
 │                 │    │   (Port 5000)   │    │   (Port 8080)   │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
+└─────────────────┘    └─────────────────┘    └─────────────────┘ 
                               │
                               ▼
                        ┌─────────────────┐    ┌─────────────────┐

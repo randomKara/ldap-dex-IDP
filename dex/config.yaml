@@ -16,8 +16,8 @@ oauth2:
 staticClients:
 - id: flask-app
   redirectURIs:
-  - 'http://localhost:5000/oauth2/callback'
-  name: 'Flask Application (OAuth2 PEP)'
+  - 'http://localhost:5000/oauth2callback'
+  name: 'Flask Application (Apache OAuth2 PEP)'
   secret: flask-app-secret
 
 connectors:
