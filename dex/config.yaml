@@ -1,10 +1,11 @@
-issuer: http://localhost
+issuer: http://172.25.0.30
 
 storage:
   type: memory
 
 web:
   http: 0.0.0.0:5556
+  allowedOrigins: ['http://172.25.0.30', 'http://172.25.0.40']
 
 logger:
   level: "debug"
@@ -12,20 +13,24 @@ logger:
 
 oauth2:
   skipApprovalScreen: true
+  responseTypes: ["code"]
 
 staticClients:
 - id: flask-app
   redirectURIs:
-  - 'http://localhost:5000/oauth2callback'
+  - 'http://172.25.0.40/oauth2callback'
   name: 'Flask Application (Apache OAuth2 PEP)'
   secret: flask-app-secret
+  trustedPeers: ['http://172.25.0.40']
 
 connectors:
 - type: ldap
   id: ldap
   name: LDAP
   config:
-    host: openldap:389app
+    host: 172.25.0.10:389
+    insecureNoSSL: true
+    insecureSkipVerify: true
     
     # Authentication for LDAP searches
     bindDN: cn=admin,dc=example,dc=org
