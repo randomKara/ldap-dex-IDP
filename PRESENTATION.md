@@ -10,15 +10,16 @@ The solution provides a centralized authentication gateway that protects backend
 
 **Key Deliverables:**
 - A fully containerized OAuth2 & OIDC Identity Provider solution.
-- Centralized policy enforcement and user authentication.
+- Centralized policy enforcement and user authentication within a single, isolated network.
 - Secure integration with backend services via HTTP header injection.
+- Adherence to security best practices, including the principle of least privilege for network exposition.
 
 ---
 
 ### **2. Business Objectives**
 
-- **Enhance Security**: Implement a Zero Trust model where every request is verified.
-- **Centralize Authentication**: Simplify access management for multiple applications.
+- **Enhance Security**: Implement a Zero Trust model where every request is verified within a secure network perimeter.
+- **Centralize Authentication**: Simplify access management for multiple applications using a single identity source (OpenLDAP).
 - **Improve Compliance**: Adhere to industry standards like OAuth2, OIDC, and ANSSI security recommendations.
 - **Legacy System Integration**: Provide a non-intrusive way to secure existing applications that lack modern authentication capabilities.
 
@@ -26,80 +27,31 @@ The solution provides a centralized authentication gateway that protects backend
 
 ### **3. Technical Architecture**
 
-The platform is composed of five core services, orchestrated by Docker Compose in an isolated network.
+The platform is composed of five core services, orchestrated by Docker Compose within a single bridge network (`172.25.0.0/24`) to ensure network isolation and security.
 
 #### **Core Components:**
 
-| Service | Technology | Role |
-|---|---|---|
-| **PEP (Policy Enforcement Point)**| Apache httpd + `mod_auth_openidc`| The main entry point that intercepts user requests and enforces OIDC authentication. It proxies authenticated requests to backend services. |
-| **Apache Reverse Proxy** | Apache httpd + `mod_proxy` | A dedicated routing layer that securely exposes the internal Dex OIDC endpoints (`/auth`, `/token`, etc.) to the PEP. |
-| **Dex OIDC Provider** | Dex (CNCF Project) | An OIDC-compliant identity broker that connects to the OpenLDAP backend and issues tokens. |
-| **OpenLDAP** | OpenLDAP | The identity source, storing user credentials and group information. |
-| **Flask Application** | Python Flask | A sample protected backend service that receives user information via injected HTTP headers. |
-
-#### **High-Level Diagram:**
-```mermaid
-graph TD
-    subgraph "External Access"
-        A[User Browser]
-    end
-
-    subgraph "DMZ (Exposed Services)"
-        B(PEP @ 172.25.0.40)
-        C(Apache Proxy @ 172.25.0.30)
-    end
-
-    subgraph "Internal Network (Not Exposed)"
-        D[Dex @ 172.25.0.20]
-        E[OpenLDAP @ 172.25.0.10]
-        F[Flask App @ 172.25.0.50]
-    end
-
-    A --> B;
-    B -- OIDC Redirect --> C;
-    C -- Proxy Pass --> D;
-    D -- Authenticate via --> E;
-    B -- Proxy Authenticated Request --> F;
-```
+| Service | Technology | IP Address | Role |
+|---|---|---|---|
+| **PEP (Policy Enforcement Point)**| Apache httpd + `mod_auth_openidc`| `172.25.0.40` | The main entry point that intercepts all user requests, enforces OIDC authentication, and proxies authenticated requests to the backend Flask application. It injects user identity information into HTTP headers. |
+| **Apache Reverse Proxy** | Apache httpd + `mod_proxy` | `172.25.0.30` | A dedicated routing layer that securely exposes a subset of the internal Dex OIDC endpoints (`/auth`, `/theme`, `/static`, etc.) to the PEP, acting as a controlled gateway. |
+| **Dex OIDC Provider** | Dex (CNCF Project) | `172.25.0.20` | An OIDC-compliant identity broker that connects to the OpenLDAP backend and issues tokens. Some endpoints are accessed directly by the PEP, while others are routed through the Apache Reverse Proxy. |
+| **OpenLDAP** | OpenLDAP | `172.25.0.10` | The centralized user directory and identity store. |
+| **Flask Application** | Flask | `172.25.0.50` | The protected backend service that receives requests only after they have been authenticated by the PEP. |
 
 ---
 
-### **4. Authentication Flow**
+### **4. Authentication and Communication Flow**
 
-1.  **Request Initiation**: The user accesses the PEP (`http://172.25.0.40`).
-2.  **Authentication Trigger**: The PEP, seeing no valid session, redirects the user to the OIDC provider via the Apache Proxy (`http://172.25.0.30/auth`).
-3.  **User Login**: The Dex login page is displayed. The user authenticates with their LDAP credentials.
-4.  **Token Issuance**: Dex validates the credentials against OpenLDAP and issues an authorization code back to the PEP.
-5.  **Token Exchange**: The PEP exchanges the code for an ID Token and Access Token from Dex.
-6.  **Authenticated Access**: The PEP validates the tokens, injects user details into HTTP headers (`X-User-ID`, `X-User-Email`, etc.), and proxies the request to the backend Flask application.
-7.  **Service Access**: The Flask application uses the headers to serve a personalized response.
+The entire authentication process occurs within the secure, isolated Docker network.
 
----
+1.  A user attempts to access the main entry point at the PEP's IP address (`http://172.25.0.40`).
+2.  The PEP, using `mod_auth_openidc`, intercepts the request and determines that the user is not authenticated.
+3.  The PEP redirects the user to the Dex authorization endpoint, which is exposed via the **Apache Reverse Proxy** (`http://172.25.0.30/auth`).
+4.  The user authenticates against Dex using their LDAP credentials. Dex verifies these credentials with the **OpenLDAP** service.
+5.  Upon successful authentication, Dex redirects the user back to the PEP with an authorization code.
+6.  The PEP's `mod_auth_openidc` module then communicates directly with Dex's token endpoint (`http://172.25.0.20:5556/token`) to exchange the code for an ID token and an access token.
+7.  With a valid token, the PEP proxies the original request to the **Flask Application** (`http://172.25.0.50:8080`), injecting the user's identity (username, email, groups) into the HTTP headers.
+8.  The Flask application processes the request and serves content, using the injected headers to display user-specific information.
 
-### **5. Security Model (Zero Trust)**
-
-Security is enforced at every layer of the architecture.
-
-- **Network Controls**:
-  - **Static IP Segmentation**: Each service has a dedicated IP address in a private network (`172.25.0.0/24`), preventing spoofing and enabling strict firewall rules.
-  - **Minimal Exposure**: Only the PEP and Apache Proxy have externally mapped ports. All other services are only accessible within the Docker network.
-
-- **Application Controls**:
-  - **CSRF Protection**: `state` parameter validation in the OIDC flow and secure, HttpOnly cookies prevent cross-site request forgery.
-  - **Strict CORS Policy**: Only allows requests from the trusted PEP to the OIDC proxy, preventing unauthorized browser interactions.
-  - **ANSSI-Compliant Headers**:
-    - `Strict-Transport-Security`: Enforces HTTPS.
-    - `X-Frame-Options: DENY`: Prevents clickjacking.
-    - `X-XSS-Protection`: Activates browser-level XSS filtering.
-    - `X-Content-Type-Options: nosniff`: Prevents MIME-type sniffing.
-
-- **Identity Controls**:
-  - **Centralized Authentication**: All authentication decisions are made by the PEP and Dex, not the backend applications.
-  - **Least Privilege**: The backend Flask app only receives the user identity; it has no access to tokens or credentials.
-
----
-
-### **6. Conclusion**
-
-This project successfully demonstrates a robust, secure, and modern approach to identity and access management. It is a production-ready foundation for any organization looking to implement a Zero Trust architecture while supporting a diverse landscape of applications. 
+This architecture ensures that the Flask application remains completely isolated from the public-facing network and only receives traffic that has been vetted and authenticated by the PEP, enforcing a strict Zero Trust policy. 
