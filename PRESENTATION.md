@@ -62,10 +62,10 @@ graph TB
     PEP_BACKEND --> DEX
     PEP_APP --> FLASK
     
-    classDef external fill:#ff9999,stroke:#333,stroke-width:2px
-    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px
-    classDef application fill:#99ff99,stroke:#333,stroke-width:2px
-    classDef isolated fill:#ffff99,stroke:#f00,stroke-width:3px
+    classDef external fill:#ff9999,stroke:#333,stroke-width:2px,color:#000000
+    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px,color:#000000
+    classDef application fill:#99ff99,stroke:#333,stroke-width:2px,color:#000000
+    classDef isolated fill:#ffff99,stroke:#f00,stroke-width:3px,color:#000000
     
     class AP,PEP_EXT external
     class LDAP,DEX,AP_BACKEND,PEP_BACKEND backend
@@ -95,9 +95,9 @@ graph LR
     BACK --> |"Authorized Only"| APP
     APP -.-> |"No Direct Access"| INTERNET
     
-    classDef external fill:#ff9999,stroke:#333,stroke-width:2px
-    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px
-    classDef application fill:#99ff99,stroke:#333,stroke-width:2px
+    classDef external fill:#ff9999,stroke:#333,stroke-width:2px,color:#000000
+    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px,color:#000000
+    classDef application fill:#99ff99,stroke:#333,stroke-width:2px,color:#000000
     
     class EXT external
     class BACK backend
@@ -229,9 +229,9 @@ graph TB
     EXT_PEP -.-> BACK_PEP
     BACK_PEP -.-> APP_PEP
     
-    classDef external fill:#ff9999,stroke:#333,stroke-width:2px
-    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px
-    classDef application fill:#99ff99,stroke:#333,stroke-width:2px
+    classDef external fill:#ff9999,stroke:#333,stroke-width:2px,color:#000000
+    classDef backend fill:#99ccff,stroke:#333,stroke-width:2px,color:#000000
+    classDef application fill:#99ff99,stroke:#333,stroke-width:2px,color:#000000
     
     class EXT_PEP,EXT_AP external
     class BACK_LDAP,BACK_DEX,BACK_AP,BACK_PEP backend
@@ -261,8 +261,8 @@ graph LR
     INTERNET --> PORT_1389
     INTERNET --> PORT_1636
     
-    classDef exposed fill:#ff9999,stroke:#333,stroke-width:2px
-    classDef internal fill:#99ff99,stroke:#333,stroke-width:3px
+    classDef exposed fill:#ff9999,stroke:#333,stroke-width:2px,color:#000000
+    classDef internal fill:#99ff99,stroke:#333,stroke-width:3px,color:#000000
     
     class PORT_80,PORT_5000,PORT_1389,PORT_1636 exposed
     class DEX_5556,FLASK_8080 internal
@@ -301,8 +301,8 @@ graph TB
     A5 --> I5
     A6 --> I6
     
-    classDef requirement fill:#ffeeee,stroke:#333,stroke-width:2px
-    classDef implementation fill:#eeffee,stroke:#333,stroke-width:2px
+    classDef requirement fill:#ffeeee,stroke:#333,stroke-width:2px,color:#000000
+    classDef implementation fill:#eeffee,stroke:#333,stroke-width:2px,color:#000000
     
     class A1,A2,A3,A4,A5,A6 requirement
     class I1,I2,I3,I4,I5,I6 implementation
@@ -347,8 +347,8 @@ graph TB
     METRICS --> NETWORK_TRAFFIC
     ALERTS --> SESSION_DURATION
     
-    classDef monitoring fill:#f0f8ff,stroke:#333,stroke-width:2px
-    classDef metrics fill:#fff8dc,stroke:#333,stroke-width:2px
+    classDef monitoring fill:#f0f8ff,stroke:#333,stroke-width:2px,color:#000000
+    classDef metrics fill:#fff8dc,stroke:#333,stroke-width:2px,color:#000000
     
     class LOGS,METRICS,ALERTS monitoring
     class AUTH_SUCCESS,LATENCY,NETWORK_TRAFFIC,COOKIE_OVERFLOW,SESSION_DURATION metrics
@@ -391,10 +391,10 @@ graph TB
     PEP1 --> APP1
     PEP2 --> APP2
     
-    classDef lb fill:#ff6b6b,stroke:#333,stroke-width:3px
-    classDef dmz fill:#4ecdc4,stroke:#333,stroke-width:2px
-    classDef backend fill:#45b7d1,stroke:#333,stroke-width:2px
-    classDef app fill:#96ceb4,stroke:#333,stroke-width:2px
+    classDef lb fill:#ff6b6b,stroke:#333,stroke-width:3px,color:#000000
+    classDef dmz fill:#4ecdc4,stroke:#333,stroke-width:2px,color:#000000
+    classDef backend fill:#45b7d1,stroke:#333,stroke-width:2px,color:#000000
+    classDef app fill:#96ceb4,stroke:#333,stroke-width:2px,color:#000000
     
     class LB lb
     class PEP1,PEP2,AP1,AP2 dmz
@@ -426,8 +426,8 @@ graph LR
     
     OLD --> |Migration| NEW1
     
-    classDef old fill:#ffcccc,stroke:#333,stroke-width:2px
-    classDef new fill:#ccffcc,stroke:#333,stroke-width:2px
+    classDef old fill:#ffcccc,stroke:#333,stroke-width:2px,color:#000000
+    classDef new fill:#ccffcc,stroke:#333,stroke-width:2px,color:#000000
     
     class OLD old
     class NEW1,NEW2,NEW3 new
