@@ -23,8 +23,8 @@ services:
       - "1389:389"
       - "1636:636"
     networks:
-      secure-network:
-        ipv4_address: 172.25.0.10
+      backend-network:
+        ipv4_address: 172.25.1.10
 
   dex:
     build: ./dex
@@ -37,8 +37,8 @@ services:
     depends_on:
       - openldap
     networks:
-      secure-network:
-        ipv4_address: 172.25.0.20
+      backend-network:
+        ipv4_address: 172.25.1.20
 
   apache-proxy:
     build: ./apache-proxy
@@ -48,8 +48,10 @@ services:
     depends_on:
       - dex
     networks:
-      secure-network:
+      external-network:
         ipv4_address: 172.25.0.30
+      backend-network:
+        ipv4_address: 172.25.1.30
 
   pep:
     build: ./PEP
@@ -60,8 +62,12 @@ services:
       - apache-proxy
       - flask-app
     networks:
-      secure-network:
+      external-network:
         ipv4_address: 172.25.0.40
+      backend-network:
+        ipv4_address: 172.25.1.40
+      app-network:
+        ipv4_address: 172.25.2.40
 
   flask-app:
     build: ./flask-app
@@ -74,13 +80,44 @@ services:
     depends_on:
       - openldap
     networks:
-      secure-network:
-        ipv4_address: 172.25.0.50
+      app-network:
+        ipv4_address: 172.25.2.50
 
 networks:
-  secure-network:
+  # External/DMZ Network - Front-facing services
+  external-network:
     driver: bridge
+    name: idp-external
     ipam:
       config:
         - subnet: 172.25.0.0/24
-          gateway: 172.25.0.1 
+          gateway: 172.25.0.1
+    labels:
+      - "purpose=dmz"
+      - "security.level=external"
+
+  # Backend Network - Internal infrastructure services
+  backend-network:
+    driver: bridge
+    name: idp-backend
+    internal: false  # Allow external access for LDAP ports
+    ipam:
+      config:
+        - subnet: 172.25.1.0/24
+          gateway: 172.25.1.1
+    labels:
+      - "purpose=backend"
+      - "security.level=internal"
+
+  # Application Network - Business logic services
+  app-network:
+    driver: bridge
+    name: idp-application
+    internal: true  # No external access
+    ipam:
+      config:
+        - subnet: 172.25.2.0/24
+          gateway: 172.25.2.1
+    labels:
+      - "purpose=application"
+      - "security.level=protected" 

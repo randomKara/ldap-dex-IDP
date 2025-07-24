@@ -28,7 +28,7 @@ connectors:
   id: ldap
   name: LDAP
   config:
-    host: 172.25.0.10:389
+    host: 172.25.1.10:389
     insecureNoSSL: true
     insecureSkipVerify: true
     

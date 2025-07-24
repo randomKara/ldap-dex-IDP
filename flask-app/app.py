@@ -112,7 +112,7 @@ def home():
         <body>
             <h1>Access Denied</h1>
             <p>This application must be accessed through the OAuth2 PEP.</p>
-            <p>Please access: <a href="http://localhost:5000">http://localhost:5000</a></p>
+            <p>Please access: <a href="http://172.25.0.40:5000">http://172.25.0.40:5000</a></p>
         </body>
         </html>
         ''', 403
@@ -137,5 +137,5 @@ def health():
 if __name__ == '__main__':
     print(f"Flask backend starting on port {FLASK_PORT}")
     print("This backend is protected by OAuth2 PEP")
-    print("Access the application via: http://localhost:5000")
+    print("Access the application via: http://172.25.0.40:5000")
     app.run(host='0.0.0.0', port=FLASK_PORT, debug=True) 
