@@ -19,9 +19,11 @@ services:
       LDAP_TLS_ENFORCE: "false"
       LDAP_TLS_VERIFY_CLIENT: "never"
       LDAP_REPLICATION: "false"
-    ports:
-      - "1389:389"
-      - "1636:636"
+    # SECURITY FIX: Remove direct internet exposure of LDAP ports
+    # LDAP should only be accessible internally via backend network
+    expose:
+      - "389"   # Internal LDAP port only
+      - "636"   # Internal LDAPS port only
     networks:
       backend-network:
         ipv4_address: 172.25.1.10
@@ -97,10 +99,11 @@ networks:
       - "security.level=external"
 
   # Backend Network - Internal infrastructure services
+  # SECURITY FIX: Make backend network truly internal
   backend-network:
     driver: bridge
     name: idp-backend
-    internal: false  # Allow external access for LDAP ports
+    internal: true  # ZERO TRUST: No external access to infrastructure services
     ipam:
       config:
         - subnet: 172.25.1.0/24
@@ -108,6 +111,7 @@ networks:
     labels:
       - "purpose=backend"
       - "security.level=internal"
+      - "zero-trust=enabled"
 
   # Application Network - Business logic services
   app-network:
