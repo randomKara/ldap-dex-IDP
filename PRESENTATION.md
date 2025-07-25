@@ -105,7 +105,7 @@ sequenceDiagram
 ## Implementation Details
 
 ### OIDC Configuration
-- **Provider**: Dex at `http://172.25.1.20:5556`
+- **Provider**: Dex at `http://172.25.1.20`
 - **Client**: `flask-app` with secret `flask-app-secret`
 - **Scopes**: `openid email profile groups`
 - **Token endpoint**: Internal network communication
@@ -136,10 +136,12 @@ The backend network isolation can be verified:
 docker network inspect idp-backend | grep '"Internal": true'
 
 # Verify LDAP not accessible externally
-curl http://localhost:389  # Connection refused
+curl http://172.25.1.10    # Couldn't connect to server
+curl http://localhost:389  # Couldn't connect to server
 
 # Verify Dex not accessible externally  
-curl http://localhost:5556  # Connection refused
+curl http://172.25.1.20    # Couldn't connect to server
+curl http://localhost:5556  # Couldn't connect to server
 ```
 
 **Justification**: Commands above demonstrate that backend services are not accessible from the host, proving network isolation works.
