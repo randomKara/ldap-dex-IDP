@@ -85,7 +85,7 @@ HOME_TEMPLATE = '''
 def get_user_from_headers():
     """Extract user information from HTTP headers set by OAuth2 PEP"""
     return {
-        'id': request.headers.get('X-User-ID', 'unknown'),
+        'id': request.headers.get('Remote-User', 'unknown'),
         'name': request.headers.get('X-User-Name', 'Unknown User'),
         'email': request.headers.get('X-User-Email', ''),
         'groups': request.headers.get('X-User-Groups', ''),
@@ -93,10 +93,10 @@ def get_user_from_headers():
     }
 
 def get_debug_headers():
-    """Get all X-User headers for debugging"""
+    """Get all user-related headers for debugging"""
     debug_headers = []
     for header, value in request.headers.items():
-        if header.startswith('X-User') or header == 'X-Authenticated':
+        if header.startswith('X-User') or header in ['X-Authenticated', 'Remote-User']:
             debug_headers.append((header, value))
     return debug_headers
 

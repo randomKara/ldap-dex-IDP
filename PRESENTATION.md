@@ -121,7 +121,7 @@ The Flask application validates authentication via HTTP headers:
 ```python
 def get_user_from_headers():
     return {
-        'id': request.headers.get('X-User-ID'),
+        'id': request.headers.get('Remote-User'),
         'authenticated': request.headers.get('X-Authenticated') == 'true'
     }
 ```
