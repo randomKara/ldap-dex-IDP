@@ -2,31 +2,6 @@
 
 A containerized OAuth2 Policy Enforcement Point (PEP) implementing 3-tier network segmentation for secure access control.
 
-## Architecture
-
-```mermaid
-graph TB
-    subgraph "External Network - 172.25.0.0/24"
-        PEP[PEP :5000]
-        Apache[Apache :80]
-    end
-    
-    subgraph "Backend Network - 172.25.1.0/24 (Internal)"
-        LDAP[LDAP :389]
-        Dex[Dex OIDC :5556]
-    end
-    
-    subgraph "Application Network - 172.25.2.0/24 (Internal)"
-        Flask[Flask App :8080]
-    end
-    
-    User --> PEP
-    PEP --> Apache
-    Apache --> Dex
-    Dex --> LDAP
-    PEP --> Flask
-```
-
 ## Features
 
 - **Network Segmentation**: 3-tier isolation (external, backend, application)
@@ -40,8 +15,12 @@ graph TB
 # Start all services
 docker compose up -d
 
-# Access the application
-curl http://172.25.0.40:5000
+# Access the application with terminal
+curl -L http://172.25.0.40
+
+# Access the application with your browser
+Open your web browser and navigate to the IP address of the PEP service (e.g., `http://172.25.0.40`).
+
 ```
 
 **Test Accounts:**
@@ -66,7 +45,7 @@ curl http://172.25.0.40:5000
 - **LDAP**: Ports not exposed to host (accessible only within backend network)
 
 ### OIDC Configuration
-- **Provider**: Dex at `http://172.25.1.20:5556`
+- **Provider**: Dex at `http://172.25.1.20` - no internet access
 - **Client ID**: `flask-app`
 - **Scopes**: `openid email profile groups`
 - **Session timeout**: 30 minutes inactivity

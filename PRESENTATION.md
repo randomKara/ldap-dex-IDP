@@ -9,17 +9,17 @@ This project implements an OAuth2 Policy Enforcement Point (PEP) with 3-tier net
 ```mermaid
 graph TB
     subgraph "172.25.0.0/24 - External Network"
-        PEP[PEP :5000]
-        Apache[Apache :80]
+        PEP[PEP .40]
+        Apache[Apache .30]
     end
     
     subgraph "172.25.1.0/24 - Backend Network (Internal)"
-        LDAP[LDAP :389]
-        Dex[Dex OIDC :5556]
+        LDAP[LDAP .10:389]
+        Dex[Dex OIDC .20]
     end
     
     subgraph "172.25.2.0/24 - Application Network (Internal)"
-        Flask[Flask App :8080]
+        Flask[Flask App .50]
     end
     
     User --> PEP
