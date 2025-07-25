@@ -80,3 +80,9 @@ This implementation follows network segmentation principles:
 3. **Application tier**: Business logic completely isolated (Flask)
 
 The backend network configuration `internal: true` in docker-compose.yml ensures no external internet access to identity services, reducing attack surface. 
+
+## Documentation
+
+- [ACCESS_GUIDE.md](ACCESS_GUIDE.md): Instructions for running the project and logging in.
+- [NETWORK_ARCHITECTURE.md](NETWORK_ARCHITECTURE.md): Overview of the network segmentation.
+- [PRESENTATION.md](PRESENTATION.md): High-level overview of the project architecture and security features. 
