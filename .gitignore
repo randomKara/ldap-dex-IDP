@@ -1,6 +1,6 @@
 # Logs
-*.log
-sniffer/pcap/*
+sniffer/pcap
+sniffer/logs
 
 # OS generated files
 .DS_Store

@@ -19,8 +19,6 @@ services:
       LDAP_TLS_ENFORCE: "false"
       LDAP_TLS_VERIFY_CLIENT: "never"
       LDAP_REPLICATION: "false"
-    # SECURITY FIX: Remove direct internet exposure of LDAP ports
-    # LDAP should only be accessible internally via backend network
     expose:
       - "389"   # Internal LDAP port only
       - "636"   # Internal LDAPS port only
