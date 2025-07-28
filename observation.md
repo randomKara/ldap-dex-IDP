@@ -22,6 +22,7 @@ L'analyse s'appuie sur l'architecture réseau segmentée suivante :
 En analysant le trafic (`global_traffic_*.csv`), nous pouvons décomposer le processus d'authentification en 5 phases distinctes qui illustrent parfaitement le fonctionnement de `mod_auth_openidc`.
 
 ```mermaid
+%%{init: { 'theme': 'base', 'themeVariables': { 'textColor': '#000000' } } }%%
 sequenceDiagram
     participant Client as Client (curl)<br>172.25.0.1
     participant PEP as PEP (mod_auth_openidc)<br>172.25.0.40
