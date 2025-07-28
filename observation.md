@@ -28,29 +28,29 @@ sequenceDiagram
     participant DexIdP as Dex IdP<br>172.25.1.20:5556
     participant Flask as Flask App<br>172.25.2.50:8080
 
+    note over Client, PEP: Phase 1: Découverte (Requête Non-Authentifiée)
     rect rgb(230, 230, 255)
-        note over Client, PEP: Phase 1: Découverte (Requête Non-Authentifiée)
         Client->>PEP: GET /
         note over PEP: Pas de cookie de session valide.
         PEP-->>Client: HTTP 302 Found<br>Location: /auth?client_id=...
     end
 
+    note over Client, DexIdP: Phase 2: Authentification (via Proxy)
     rect rgb(230, 255, 230)
-        note over Client, DexIdP: Phase 2: Authentification (via Proxy)
         Client->>DexIdP: POST /auth/local (user/pass)
         note over DexIdP: (Vérification LDAP sur le réseau backend)
         DexIdP-->>Client: HTTP 302 Found<br>Location: /oauth2callback?code=...
     end
 
+    note over PEP, DexIdP: Phase 3: Échange Code-Token (Réseau Backend)
     rect rgb(255, 245, 230)
-        note over PEP, DexIdP: Phase 3: Échange Code-Token (Réseau Backend)
         note over PEP: Le client est redirigé vers /oauth2callback.
         PEP->>DexIdP: POST /token (code, client_secret)
         DexIdP-->>PEP: 200 OK, {access_token, id_token}
     end
     
+    note over PEP, DexIdP: Phase 4: Validation du Token (Réseau Backend)
     rect rgb(255, 230, 230)
-        note over PEP, DexIdP: Phase 4: Validation du Token (Réseau Backend)
         PEP->>DexIdP: GET /keys
         DexIdP-->>PEP: 200 OK, {JWK Set}
         note over PEP: Vérifie la signature du id_token.
@@ -60,8 +60,8 @@ sequenceDiagram
         PEP-->>Client: HTTP 302 Found<br>Location: / (URL d'origine)
     end
 
+    note over Client, Flask: Phase 5: Accès Autorisé (Proxy Authentifié)
     rect rgb(240, 240, 240)
-        note over Client, Flask: Phase 5: Accès Autorisé (Proxy Authentifié)
         Client->>PEP: GET / (avec cookie de session)
         note over PEP: Le cookie est valide.
         PEP->>Flask: GET /<br>+ Headers (X-User-Name, etc.)
