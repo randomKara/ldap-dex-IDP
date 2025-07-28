@@ -71,6 +71,22 @@ services:
       app-network:
         ipv4_address: 172.25.2.40
 
+  # Network traffic sniffer for PEP analysis
+  pep-sniffer:
+    build: ./sniffer
+    container_name: pep-sniffer
+    privileged: true
+    network_mode: "container:pep"
+    volumes:
+      - ./sniffer/logs:/var/log/sniffer
+      - ./sniffer/pcap:/var/captures
+    environment:
+      TARGET_CONTAINER: "pep"
+      CAPTURE_FILTER: "port 80 or port 5556 or port 8080"
+      LOG_LEVEL: "INFO"
+    depends_on:
+      - pep
+
   flask-app:
     build: ./flask-app
     container_name: flask-application
