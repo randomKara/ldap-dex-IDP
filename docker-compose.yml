@@ -113,7 +113,6 @@ networks:
       - "security.level=external"
 
   # Backend Network - Internal infrastructure services
-  # SECURITY FIX: Make backend network truly internal
   backend-network:
     driver: bridge
     name: idp-backend
