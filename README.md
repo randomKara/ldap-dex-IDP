@@ -86,3 +86,14 @@ The backend network configuration `internal: true` in docker-compose.yml ensures
 - [ACCESS_GUIDE.md](ACCESS_GUIDE.md): Instructions for running the project and logging in.
 - [NETWORK_ARCHITECTURE.md](NETWORK_ARCHITECTURE.md): Overview of the network segmentation.
 - [PRESENTATION.md](PRESENTATION.md): High-level overview of the project architecture and security features. 
+
+## Internal DNS Service
+
+An internal DNS service (Bind9) is now included in the stack. It resolves project service names (e.g., ldap.idp.local, dex.idp.local, apache.idp.local, pep.idp.local, flask.idp.local) to their respective internal IPs. All containers are configured to use this DNS for name resolution.
+
+- **DNS server IP:** 172.25.1.2
+- **Domain:** idp.local
+- **Zone file:** `dns/zones/db.internal`
+- **Configuration:** `dns/config/named.conf.*`
+
+This allows you to use friendly names (e.g., `curl http://pep.idp.local:80/`) instead of IP addresses for inter-container communication and testing. 

@@ -1,4 +1,20 @@
 services:
+  dns:
+    image: internetsystemsconsortium/bind9:9.18
+    container_name: dns-server
+    environment:
+      - BIND9_USER=root
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - ./dns/config:/etc/bind
+      - ./dns/zones:/var/lib/bind
+    networks:
+      backend-network:
+        ipv4_address: 172.25.1.2
+    restart: unless-stopped
+
   openldap:
     build: ./LDAP
     container_name: ldap-server
@@ -27,6 +43,8 @@ services:
     networks:
       backend-network:
         ipv4_address: 172.25.1.10
+    dns:
+      - 172.25.1.2
 
   dex:
     build: ./dex
@@ -41,6 +59,8 @@ services:
     networks:
       backend-network:
         ipv4_address: 172.25.1.20
+    dns:
+      - 172.25.1.2
 
   apache-proxy:
     build: ./apache-proxy
@@ -54,6 +74,8 @@ services:
         ipv4_address: 172.25.0.30
       backend-network:
         ipv4_address: 172.25.1.30
+    dns:
+      - 172.25.1.2
 
   pep:
     build: ./PEP
@@ -70,6 +92,8 @@ services:
         ipv4_address: 172.25.1.40
       app-network:
         ipv4_address: 172.25.2.40
+    dns:
+      - 172.25.1.2
 
   flask-app:
     build: ./flask-app
@@ -84,6 +108,8 @@ services:
     networks:
       app-network:
         ipv4_address: 172.25.2.50
+    dns:
+      - 172.25.1.2
 
 networks:
   # External/DMZ Network - Front-facing services

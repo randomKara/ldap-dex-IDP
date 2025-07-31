@@ -1,0 +1,4 @@
+zone "idp.local" {
+    type master;
+    file "/var/lib/bind/db.internal";
+};

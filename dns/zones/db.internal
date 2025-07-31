@@ -1,0 +1,15 @@
+$TTL    604800
+@       IN      SOA     ns.idp.local. root.idp.local. (
+                              2         ; Serial
+                         604800         ; Refresh
+                          86400         ; Retry
+                        2419200         ; Expire
+                         604800 )       ; Negative Cache TTL
+;
+@       IN      NS      ns.idp.local.
+ns      IN      A       172.25.1.2
+ldap    IN      A       172.25.1.10
+dex     IN      A       172.25.1.20
+apache  IN      A       172.25.0.30
+pep     IN      A       172.25.0.40
+flask   IN      A       172.25.2.50
