@@ -29,11 +29,11 @@ The main entry point for the application is the **Policy Enforcement Point (PEP)
 
 - **Open your web browser and navigate to:**
   ```
-  http://172.25.0.40
+  http://pep
   ```
 
 - **⚠️ IMPORTANT:**
-  - **Do NOT use `localhost:5000`**. The system is intentionally configured to reject requests from `localhost` to protect against CSRF attacks. You must use the service's static IP address.
+  - **Do NOT use `localhost:5000`**. The system is intentionally configured to reject requests from `localhost` to protect against CSRF attacks. You must use the service's Docker name (e.g., `http://pep`).
   - If you are running Docker on a remote machine, ensure you can access the `172.25.0.0/24` subnet.
 
 ### **Step 3: Authenticate**
@@ -64,14 +64,14 @@ Here are solutions to common issues you might encounter.
 ### **Issue: "Internal Server Error" or "403 Forbidden" on `http://172.25.0.40`**
 
 - **Cause**: This is the expected behavior if you try to access the application from `localhost` or an untrusted IP address. The security policies (CSRF, IP whitelisting) are correctly blocking the request.
-- **✅ Solution**: Ensure you are using the correct IP address: `http://172.25.0.40`.
+- **✅ Solution**: Ensure you are using the correct Docker service name: `http://pep`.
 
 ### **Issue: "Login error: failed to connect: LDAP Result Code 200..."**
 
 - **Cause**: The Dex container cannot establish a connection with the OpenLDAP container.
 - **✅ Solution**:
   1.  **Check Container Status**: Ensure all containers are running with `docker compose ps`.
-  2.  **Verify Network**: Confirm that the `dex-server` and `ldap-server` are on the same `secure-network`.
+  2.  **Verify Network**: Confirm that the `dex-server` and `ldap-server` are on the same `backend-network`.
   3.  **Check Logs**: Review the logs for both services for more detailed errors:
       ```bash
       docker compose logs dex-server

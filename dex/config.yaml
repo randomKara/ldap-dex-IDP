@@ -1,11 +1,11 @@
-issuer: http://172.25.0.30
+issuer: http://apache-reverse-proxy
 
 storage:
   type: memory
 
 web:
   http: 0.0.0.0:5556
-  allowedOrigins: ['http://172.25.0.30', 'http://172.25.0.40']
+  allowedOrigins: ['http://apache-reverse-proxy', 'http://pep']
 
 logger:
   level: "debug"
@@ -18,17 +18,17 @@ oauth2:
 staticClients:
 - id: flask-app
   redirectURIs:
-  - 'http://172.25.0.40/oauth2callback'
+  - 'http://pep/oauth2callback'
   name: 'Flask Application (Apache OAuth2 PEP)'
   secret: flask-app-secret
-  trustedPeers: ['http://172.25.0.40']
+  trustedPeers: ['http://pep']
 
 connectors:
 - type: ldap
   id: ldap
   name: LDAP
   config:
-    host: 172.25.1.10:389
+    host: ldap-server:389
     insecureNoSSL: true
     insecureSkipVerify: true
     

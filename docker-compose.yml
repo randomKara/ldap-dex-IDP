@@ -26,7 +26,7 @@ services:
       - "636"   # Internal LDAPS port only
     networks:
       backend-network:
-        ipv4_address: 172.25.1.10
+        # ipv4_address: 172.25.1.10
 
   dex:
     build: ./dex
@@ -40,7 +40,7 @@ services:
       - openldap
     networks:
       backend-network:
-        ipv4_address: 172.25.1.20
+        # ipv4_address: 172.25.1.20
 
   apache-proxy:
     build: ./apache-proxy
@@ -51,9 +51,9 @@ services:
       - dex
     networks:
       external-network:
-        ipv4_address: 172.25.0.30
+        # ipv4_address: 172.25.0.30
       backend-network:
-        ipv4_address: 172.25.1.30
+        # ipv4_address: 172.25.1.30
 
   pep:
     build: ./PEP
@@ -65,11 +65,11 @@ services:
       - flask-app
     networks:
       external-network:
-        ipv4_address: 172.25.0.40
+        # ipv4_address: 172.25.0.40
       backend-network:
-        ipv4_address: 172.25.1.40
+        # ipv4_address: 172.25.1.40
       app-network:
-        ipv4_address: 172.25.2.40
+        # ipv4_address: 172.25.2.40
 
   flask-app:
     build: ./flask-app
@@ -83,7 +83,7 @@ services:
       - openldap
     networks:
       app-network:
-        ipv4_address: 172.25.2.50
+        # ipv4_address: 172.25.2.50
 
 networks:
   # External/DMZ Network - Front-facing services

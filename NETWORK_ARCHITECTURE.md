@@ -4,21 +4,19 @@
 
 This project implements a **3-tier network segmentation** architecture following Zero Trust principles, isolating services by function and security level.
 
-```
-172.25.0.0/16 (Docker Global Network)
-├── 172.25.0.0/24 (External/DMZ Network)
-│   ├── 172.25.0.30 - Apache Reverse Proxy (Entry Point)
-│   └── 172.25.0.40 - PEP (User Interface)
+Docker Network (DNS-based)
+├── external-network
+│   ├── apache-reverse-proxy - Apache Reverse Proxy (Entry Point)
+│   └── pep - PEP (User Interface)
 │
-├── 172.25.1.0/24 (Backend/Infrastructure Network - ISOLATED)
-│   ├── 172.25.1.10 - OpenLDAP (Identity Store - INTERNAL ONLY)
-│   ├── 172.25.1.20 - Dex (OIDC Provider - INTERNAL ONLY)
-│   └── 172.25.1.30 - Apache Proxy (Backend Interface)
+├── backend-network
+│   ├── ldap-server - OpenLDAP (Identity Store - INTERNAL ONLY)
+│   ├── dex-server - Dex (OIDC Provider - INTERNAL ONLY)
+│   └── apache-reverse-proxy - Apache Proxy (Backend Interface)
 │
-└── 172.25.2.0/24 (Application Network - ISOLATED)
-    ├── 172.25.2.40 - PEP (App Interface)
-    └── 172.25.2.50 - Flask Application (Business Logic)
-```
+└── app-network
+    ├── pep - PEP (App Interface)
+    └── flask-application - Flask Application (Business Logic)
 
 ## Network Configuration
 
@@ -74,11 +72,11 @@ Authentication → Backend Network (Dex) → Backend Network (LDAP)
 
 | From Service | To Service | Network Path | Purpose | Internet Access |
 |--------------|------------|--------------|---------|-----------------|
-| **User** | PEP | External → External | Web Interface | ✅ Yes |
-| **PEP** | Apache Proxy | External → External | OAuth2 Auth | ✅ Yes |
-| **Apache Proxy** | Dex | External → Backend | OIDC Endpoints | ❌ Internal Only |
-| **Dex** | LDAP | Backend → Backend | User Validation | ❌ Internal Only |
-| **PEP** | Flask | External → Application | App Requests | ❌ Internal Only |
+| **User** | PEP (pep) | External → External | Web Interface | ✅ Yes |
+| **PEP** | Apache Proxy (apache-reverse-proxy) | External → External | OAuth2 Auth | ✅ Yes |
+| **Apache Proxy** | Dex (dex-server) | External → Backend | OIDC Endpoints | ❌ Internal Only |
+| **Dex** | LDAP (ldap-server) | Backend → Backend | User Validation | ❌ Internal Only |
+| **PEP** | Flask (flask-application) | External → Application | App Requests | ❌ Internal Only |
 
 ## Docker Compose Networks
 
@@ -176,3 +174,5 @@ From the previous configuration with exposed LDAP ports to this secured setup:
 2. **LDAP Access Logs**: Log all LDAP queries for anomaly detection
 3. **Failed Authentication Monitoring**: Track authentication failures
 4. **Network Boundary Alerts**: Alert on unexpected network access attempts
+
+**Note:** All service communication now uses Docker DNS names (service names) instead of static IP addresses. This improves maintainability and flexibility.

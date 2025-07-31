@@ -16,10 +16,10 @@ A containerized OAuth2 Policy Enforcement Point (PEP) implementing 3-tier networ
 docker compose up -d
 
 # Access the application with terminal
-curl -L http://172.25.0.40
+curl -L http://pep
 
 # Access the application with your browser
-Open your web browser and navigate to the IP address of the PEP service (e.g., `http://172.25.0.40`).
+Open your web browser and navigate to the PEP service using its Docker name (e.g., `http://pep`).
 
 ```
 
@@ -31,11 +31,11 @@ Open your web browser and navigate to the IP address of the PEP service (e.g., `
 
 | Service | Network | Ports | Description |
 |---------|---------|-------|-------------|
-| PEP | External | 5000 | OAuth2 Policy Enforcement Point |
-| Apache | External | 80 | Reverse proxy for Dex |
-| Dex | Backend | 5556 | OIDC identity provider |
-| LDAP | Backend | 389 | User directory |
-| Flask | Application | 8080 | Protected application |
+| PEP (pep) | External | 5000 | OAuth2 Policy Enforcement Point |
+| Apache (apache-reverse-proxy) | External | 80 | Reverse proxy for Dex |
+| Dex (dex-server) | Backend | 5556 | OIDC identity provider |
+| LDAP (ldap-server) | Backend | 389 | User directory |
+| Flask (flask-application) | Application | 8080 | Protected application |
 
 ## Configuration
 
@@ -45,7 +45,7 @@ Open your web browser and navigate to the IP address of the PEP service (e.g., `
 - **LDAP**: Ports not exposed to host (accessible only within backend network)
 
 ### OIDC Configuration
-- **Provider**: Dex at `http://172.25.1.20` - no internet access
+- **Provider**: Dex at `http://dex-server` - no internet access
 - **Client ID**: `flask-app`
 - **Scopes**: `openid email profile groups`
 - **Session timeout**: 30 minutes inactivity
@@ -60,7 +60,8 @@ docker compose logs -f <service>
 docker compose ps
 
 # Access LDAP for debugging
-docker exec ldap-server ldapsearch -x -b "dc=example,dc=org"
+curl http://ldap-server:389    # Should connect from inside Docker network
+curl http://dex-server:5556    # Should connect from inside Docker network
 ```
 
 ## Security Implementation

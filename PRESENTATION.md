@@ -8,18 +8,18 @@ This project implements an OAuth2 Policy Enforcement Point (PEP) with 3-tier net
 
 ```mermaid
 graph TB
-    subgraph "172.25.0.0/24 - External Network"
-        PEP[PEP .40]
-        Apache[Apache .30]
+    subgraph "external-network"
+        PEP[pep]
+        Apache[apache-reverse-proxy]
     end
     
-    subgraph "172.25.1.0/24 - Backend Network (Internal)"
-        LDAP[LDAP .10:389]
-        Dex[Dex OIDC .20]
+    subgraph "backend-network"
+        LDAP[ldap-server:389]
+        Dex[dex-server]
     end
     
-    subgraph "172.25.2.0/24 - Application Network (Internal)"
-        Flask[Flask App .50]
+    subgraph "app-network"
+        Flask[flask-application]
     end
     
     User --> PEP
@@ -94,18 +94,18 @@ sequenceDiagram
 
 | Service | Purpose | Network | Internet Access | Exposed Ports |
 |---------|---------|---------|----------------|---------------|
-| PEP | Authentication gateway | External | Yes | 5000 |
-| Apache | Reverse proxy | External | Yes | 80 |
-| Dex | OIDC provider | Backend | No | None |
-| LDAP | User directory | Backend | No | None |
-| Flask | Business application | Application | No | None |
+| PEP (pep) | Authentication gateway | External | Yes | 5000 |
+| Apache (apache-reverse-proxy) | Reverse proxy | External | Yes | 80 |
+| Dex (dex-server) | OIDC provider | Backend | No | None |
+| LDAP (ldap-server) | User directory | Backend | No | None |
+| Flask (flask-application) | Business application | Application | No | None |
 
 **Justification**: Only external network services have exposed ports in docker-compose.yml. Backend services use `expose:` instead of `ports:`, preventing external access.
 
 ## Implementation Details
 
 ### OIDC Configuration
-- **Provider**: Dex at `http://172.25.1.20`
+- **Provider**: Dex at `http://dex-server`
 - **Client**: `flask-app` with secret `flask-app-secret`
 - **Scopes**: `openid email profile groups`
 - **Token endpoint**: Internal network communication
@@ -136,15 +136,17 @@ The backend network isolation can be verified:
 docker network inspect idp-backend | grep '"Internal": true'
 
 # Verify LDAP not accessible externally
-curl http://172.25.1.10    # Couldn't connect to server
+curl http://ldap-server:389    # Should connect from inside Docker network
 curl http://localhost:389  # Couldn't connect to server
 
 # Verify Dex not accessible externally  
-curl http://172.25.1.20    # Couldn't connect to server
+curl http://dex-server:5556    # Should connect from inside Docker network
 curl http://localhost:5556  # Couldn't connect to server
 ```
 
 **Justification**: Commands above demonstrate that backend services are not accessible from the host, proving network isolation works.
+
+**Note:** All service communication now uses Docker DNS names (service names) instead of static IP addresses. This improves maintainability and flexibility.
 
 ## Key Benefits
 
